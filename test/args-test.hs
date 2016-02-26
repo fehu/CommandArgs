@@ -40,7 +40,7 @@ hidlArg  = optional "H" ["hidden-layer"] ["Specify hidden layers"]
 
 
 
-make :: (DefaultSingleParser v) => ACombinedArgValParser '[v] v
+make :: (DefaultSingleParser v) => ACombinedArgValParser (AList Positional) '[v] v
 make = CombinedArgValParser $ CombinedArgValParserSingle singleParser
 
 make' = CombinedArgValParser . CombinedArgValParserSingle

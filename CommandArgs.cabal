@@ -20,7 +20,8 @@ library
   exposed-modules:     CArgs
                        CArgs.Parsers
                        AList
-  -- other-modules:
+
+  other-modules:       CArgs.Parser
   -- other-extensions:
   build-depends:       base >=4.8 && <4.9
                      , containers > 0.5
