@@ -34,7 +34,7 @@ module CArgs.Parsers (
 ) where
 
 import AList
-import CArgs
+import CArgs.Descriptors
 import CArgs.Parser
 
 import Text.Read
@@ -42,6 +42,7 @@ import Data.Char
 import Data.Maybe
 import Data.List.Split
 import Data.Either.Projections
+
 
 -----------------------------------------------------------------------------
 
@@ -84,10 +85,12 @@ bool = SingleParser "Bool" $ \x -> case map toLower x
                                            "1"     -> Just True
                                            "y"     -> Just True
                                            "yes"   -> Just True
+                                           "on"    -> Just True
                                            "false" -> Just False
                                            "0"     -> Just False
                                            "n"     -> Just False
                                            "no"    -> Just False
+                                           "off"   -> Just False
                                            _       -> Nothing
 
 list :: SingleParser a -> SingleParser [a]
@@ -106,11 +109,9 @@ instance CombinedArgValParser subs (CombinedArgValParserStub subs) '[] Flag wher
     combinedParserName (CombinedArgValParserSingle p) = parseArgType p
 
 
-
+type TryDR = EitherDR Multiline
 
 -----------------------------------------------------------------------------
-
-type TryDR = EitherDR Multiline
 
 parsePositional :: ( MapAList lp (Positional :-: Identity)
                    , MapAList lp (TryDR (Positional :-: Identity))
@@ -126,6 +127,25 @@ parsePositional al args =  toEither . fmap concat . leftProjection $ try
                 where parser  = argValParser a
                       (r, ls) = parseArgValue parser [s]
           try = eitherDR tryList
+
+-----------------------------------------------------------------------------
+
+
+parseOptionals = undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

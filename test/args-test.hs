@@ -7,6 +7,7 @@ module Main where
 
 import CArgs
 import CArgs.Parsers
+import CArgs.Descriptors
 
 
 --main = hspec $ do
@@ -39,21 +40,6 @@ hidlArg  = optional "H" ["hidden-layer"] ["Specify hidden layers"]
                     ["number of neurons, separated by ',' or ';'"]
 
 
-
-make :: (DefaultSingleParser v) => ACombinedArgValParser (AList Positional) '[v] v
-make = CombinedArgValParser $ CombinedArgValParserSingle singleParser
-
-make' = CombinedArgValParser . CombinedArgValParserSingle
-
-optionalFlag shorts longs descr = Optional shorts longs (make' flag) descr Nil
-
-optional :: (DefaultSingleParser v) =>
-    [Char] -> [String] -> Multiline -> Multiline -> AnOptional v
-optional shorts longs descr argDescr = AnOptional $
-    Optional shorts longs make descr (auto argDescr)
-
-auto :: (DefaultSingleParser t) => Multiline -> AList Positional '[t]
-auto descr = Positional "value" singleParser descr :. Nil
 
 
 

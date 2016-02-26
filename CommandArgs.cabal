@@ -18,6 +18,8 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     CArgs
+                       CArgs.Descriptors
+                       CArgs.Values
                        CArgs.Parsers
                        AList
 
