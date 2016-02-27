@@ -10,10 +10,12 @@ import CArgs.Parsers
 import CArgs.Descriptors
 
 
+import Data.List (intercalate)
+
 --main = hspec $ do
 --    describe "" undefined
 
-main = print test
+main = putStrLn $ intercalate "\n" testHelp'
 
 
 
@@ -46,11 +48,13 @@ extraArgs = variable "E" ["extra"] ["Pass extra arguments"]
                      ["Extra arguments"]
 
 
+testHelp  = fullHelp "exec_name" args0
+testHelp' = helpFor args0 "learn-rate"
+
 test = parseArgs args0 [
     "/home/user/data/file.dat", "500", "results.txt", "-h", "-L", "0.2"
   , "-E", "QWE", "RTY", "-H", "a,t"
   ]
-
 
 
 

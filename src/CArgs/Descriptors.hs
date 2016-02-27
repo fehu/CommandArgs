@@ -17,6 +17,7 @@
            , KindSignatures
            , DataKinds
            , Rank2Types
+           , UndecidableInstances
         #-}
 
 module CArgs.Descriptors (
@@ -24,6 +25,9 @@ module CArgs.Descriptors (
 -- * Descriptors
 
   CArg(..)
+, AnyArg(..)
+, ArgHelp(..)
+
 , Positional(..)
 , Optional(..)
 
@@ -35,6 +39,8 @@ module CArgs.Descriptors (
 , SubArgs
 
 , CArgs(..)
+, getCArgs
+, getAllCArgs
 
 -- * misc
 
@@ -54,10 +60,25 @@ import Control.Arrow
 
 type Multiline = [String]
 
+
 class CArg a v where
     argName :: a v -> String
     argDescription :: a v -> Multiline
     argValParser :: a v -> AnArgValParser v
+
+
+data AnyArg = forall a v . (CArg a v) => AnyArg (a v)
+
+
+-----------------------------------------------------------------------------
+
+class ArgHelp a where argId   :: a -> String
+                      argHelp :: a -> Multiline
+
+instance (CArg a v) => ArgHelp (a v) where argId = argName
+                                           argHelp = argDescription
+instance ArgHelp AnyArg where argId (AnyArg a) = argId a
+                              argHelp (AnyArg a) = argHelp a
 
 -----------------------------------------------------------------------------
 
@@ -127,16 +148,14 @@ instance CArg (Optional as) v where
 
 -----------------------------------------------------------------------------
 
-describePosArgument (Positional n _ d) | length d > 1 = n:addIndent "  " d
-                                       | otherwise    = [unwords $ n:d]
+describePosArgument (Positional n _ d) | length d > 1 = n:addIndent (replicate 2 ' ') d
+                                       | otherwise    = [unwords $ (n++"\t"):d]
 
 describeOptArgument opt = [
       unwords $ argName opt : map abrace aNames
-    , "\t" ++ unwords (shortArgs ++ longArgs)
-    , ""
-    ] ++ addIndent "\t" (optDescription opt)
-      ++ [""]
-      ++ concatMap (addIndent "\t  ") aDescs
+    , replicate 3 ' ' ++ unwords (shortArgs ++ longArgs)
+    ] ++ addIndent (replicate 3 ' ') (optDescription opt)
+      ++ concatMap (addIndent $ replicate 6 ' ') aDescs ++ [""]
     where (aNames, aDescs) = unzip $ a2List (argName &&& describePosArgument)
                                             (optSubArgs opt)
           shortArgs = map (\c -> ['-', c]) $ shortNames opt
@@ -156,6 +175,18 @@ data CArgs lp = CArgs {
     , optionalArguments :: [Opt]
     }
 
+-- | Get positional, optional args.
+getCArgs :: CArgs lp -> ([AnyArg], [AnyArg])
+getCArgs d = (pos, opt)
+    where pos = a2List AnyArg (positionalArguments d)
+          opt = map anyArgOpt (optionalArguments d)
+
+getAllCArgs :: CArgs lp -> [AnyArg]
+getAllCArgs d = let (pos, opt) = getCArgs d in pos ++ opt
+
+
+anyArgOpt :: Opt -> AnyArg
+anyArgOpt = fromOpt AnyArg
 
 -----------------------------------------------------------------------------
 

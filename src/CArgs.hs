@@ -32,6 +32,11 @@ module CArgs (
 
 , parseArgs
 
+-- Help
+
+, fullHelp
+, helpFor
+
 ) where
 
 import AList
@@ -41,6 +46,7 @@ import CArgs.Parsers
 import CArgs.Parsers.Internal
 import CArgs.Values
 
+import Data.List (find, intercalate)
 import Data.Either.Projections
 
 -----------------------------------------------------------------------------
@@ -84,8 +90,26 @@ parseArgs d args = mapRight (\positionals -> CArgValues positionals oVals oErrs)
 
 -----------------------------------------------------------------------------
 
+fullHelp :: String ->  CArgs lp -> Multiline
+fullHelp executable d = [executable ++ " " ++ unwords posArgs ++ " " ++ unwords optArgs]
+                      ++ dPosArgs ++ dOptArgs
+    where (posArgs', optArgs') = getCArgs d
+          posArgs = map (abrace . argId) posArgs'
+          optArgs = map (sqbrace . argId) optArgs'
+          dPosArgs = ["\nPositional:"] ++ (addIndent (replicate 2 ' ') $ concatMap argHelp $ posArgs')
+          dOptArgs = ["\nOptional:\n"] ++ (addIndent (replicate 2 ' ') $ concatMap argHelp $ optArgs')
 
 
 
 
+helpFor :: CArgs lp -> String -> Multiline
+helpFor d name = maybe notFound argHelp mbArg
+    where mbArg = find ((name ==) . argId) (getAllCArgs d)
+          notFound = ["Unknown argument : '" ++ name ++ "'"]
 
+
+
+addIndent i = map (i++)
+
+abrace s = "<" ++ s ++ ">"
+sqbrace s = "[" ++ s ++ "]"
