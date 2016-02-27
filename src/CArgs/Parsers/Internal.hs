@@ -75,17 +75,20 @@ parsePositional al args =  toEither . fmap concat . leftProjection $ try
 parseOptionals :: [Opt]                       -- ^ Available options.
                -> [String]                    -- ^ Command arguments.
                -> (Multiline, OptionalValues) -- ^ Errors and values.
-parseOptionals opts = first concat . second optVals
-                    . partitionEithers . parseOptionals' opts
+parseOptionals opts = first concat . second optVals . partitionEithers
+                    . purgeRepeating . parseOptionals' opts
       where optVals = OptionalValues . Map.fromList
                     . map (argValueName &&& id)
---                    . purgeRepeating
---            purgeRepeating (h:t)
---                | any ((n ==) . argValueName) t = h : purgeRepeating
---                                  (filter ((n /=) . argValueName) t)
---                | otherwise = purgeRepeating t
---                 where n = argValueName h
---            purgeRepeating _ = []
+            purgeRepeating (Right h:t)
+                | any repeats t = err : purgeRepeating (filter (not . repeats) t)
+                | otherwise     = Right h : purgeRepeating t
+                where repeats (Right v) = n == argValueName v
+                      repeats _         = False
+                      n   = argValueName h
+                      err = Left ["Optional argument '" ++ n ++ "' used more than once" ]
+            purgeRepeating (h:t) = h : purgeRepeating t
+            purgeRepeating [] = []
+
 
 
 -- | Try to parse all optional arguments.
@@ -115,12 +118,9 @@ processOpt :: (String -> Maybe Opt)
 processOpt find name pref = case find name
     of Just (Opt (AnOptional opt)) -> processOpt' opt
        Just (Opt' opt)             -> processOpt' opt
-       _                           -> (const $ Left [err]) &&& id
-                       where err = "Unknown optional argument '" ++ pref ++ name ++"'"
---processOpt :: Maybe Opt -> [String] -> (Try ArgValue, [String])
---processOpt (Just (Opt (AnOptional opt))) = processOpt' opt
---processOpt (Just (Opt' opt)) = processOpt' opt
---processOpt _ = \args -> (Left [], args)
+       _                           -> const (Left [err]) &&& id
+    where err = "Unknown optional argument '" ++ pref ++ name ++"'"
+
 
 -- | Try to parse given argument (2).
 processOpt' :: ( Typeable v, Show v ) => Optional vs v -> [String]

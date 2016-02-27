@@ -46,7 +46,7 @@ hidlArg  = optional "H" ["hidden-layer"] ["Specify hidden layers"]
 
 
 test = parseArgs args0 [
-    "/home/user/data/file.dat", "500", "results.txt", "-h", "-L", "0.2", "-x"
+    "/home/user/data/file.dat", "500", "results.txt", "-h", "-L", "0.2", "-h"
   ]
 
 --test' = parseOptionals (optionalArguments args0) ["-h", "-L", "0.2"]
