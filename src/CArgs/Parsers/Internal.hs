@@ -32,6 +32,7 @@ import Control.Arrow
 
 import Data.Char
 import Data.List (find, drop)
+import Data.Maybe (isNothing, fromJust)
 import Data.Either
 import Data.Either.Projections
 import Data.Typeable
@@ -45,6 +46,12 @@ instance CombinedArgValParser SubArgs (CombinedArgValParserStub subs) '[] Flag w
     parseArgCombined (CombinedArgValParserSingle p) Nil = const (Right Flag) &&& id
     combinedParserName (CombinedArgValParserSingle p)   = parseArgType p
 
+instance CombinedArgValParser SubArgs (CombinedArgValParserStub subs) '[] (VarArg a) where
+    combinedParserName (CombinedArgValParserVar p) = parseArgType p
+    parseArgCombined (CombinedArgValParserVar p) Nil args = (varsParsed, rest)
+        where varArgs = takeWhile (not . (`startsWith` "-")) args
+              varsParsed = fst $ parseArgValue p varArgs
+              rest    = drop (length varArgs) args
 
 type TryDR = EitherDR Multiline
 

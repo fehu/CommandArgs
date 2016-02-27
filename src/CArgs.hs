@@ -26,6 +26,7 @@ module CArgs (
 
 , optionalFlag
 , optional
+, variable
 
 -- * Arguments parsing
 
@@ -49,6 +50,10 @@ make = CombinedArgValParser $ CombinedArgValParserSingle singleParser
 
 make' = CombinedArgValParser . CombinedArgValParserSingle
 
+makeVar :: (DefaultSingleParser v) => ACombinedArgValParser (AList Positional) '[] (VarArg v)
+makeVar = CombinedArgValParser $ CombinedArgValParserVar  defaultArgParser
+
+
 auto :: (DefaultSingleParser t) => Multiline -> AList Positional '[t]
 auto descr = Positional "value" singleParser descr :. Nil
 
@@ -60,6 +65,12 @@ optional :: (DefaultSingleParser v) =>
     [Char] -> [String] -> Multiline -> Multiline -> AnOptional v
 optional shorts longs descr argDescr = AnOptional $
     Optional shorts longs make descr (auto argDescr)
+
+-- | Create an argument with variable number of accepted values.
+variable :: (DefaultSingleParser v) =>
+    [Char] -> [String] -> Multiline -> Multiline -> AnOptional (VarArg v)
+variable shorts longs descr argDescr = AnOptional $
+    Optional shorts longs makeVar descr Nil
 
 -----------------------------------------------------------------------------
 

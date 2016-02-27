@@ -22,7 +22,6 @@
 module CArgs.Parser where
 
 
-
 -----------------------------------------------------------------------------
 
 
@@ -44,9 +43,18 @@ data AnArgValParser v = forall p . (ArgValParser p v) => ArgValParser (p v)
 
 data SingleParser v = SingleParser String (String -> Maybe v)
 
--- parseSingle (SingleParser _ p) = p
+parseSingle (SingleParser _ p) = p
 
 
+-----------------------------------------------------------------------------
+
+data GenericParser v = GenericParser String ([String] -> (TryA v, [String]))
+
+instance Show (GenericParser v) where show (GenericParser name _) = name
+
+instance ArgValParser GenericParser v where
+    parseArgValue (GenericParser _ p) = p
+    parseArgType  (GenericParser t _) = t
 
 -----------------------------------------------------------------------------
 
@@ -83,7 +91,7 @@ data ACombinedArgValParser subs vs v =
 
 data CombinedArgValParserStub (subs :: [*] -> *)  (vs :: [*]) v =
     CombinedArgValParserSingle (SingleParser v)
---  | CombinedArgValParserVar    ([String] -> (Maybe v, String))
+  | CombinedArgValParserVar    (AnArgValParser v)
 
 
 -----------------------------------------------------------------------------

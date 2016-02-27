@@ -26,7 +26,9 @@ module CArgs.Descriptors (
   CArg(..)
 , Positional(..)
 , Optional(..)
+
 , Flag(..)
+, VarArg(..)
 
 , AnOptional(..)
 , Opt(..), fromOpt, FromOptF
@@ -93,9 +95,13 @@ fromOpt f (Opt' opt) = f opt
 
 data Flag = Flag
 
+data VarArg v = VarArg [v]
+
 -----------------------------------------------------------------------------
 
 instance Show Flag where show _ = "!"
+
+instance (Show a) => Show (VarArg a) where show (VarArg l) = show l
 
 instance Show (Optional vs v) where show = argName
 
