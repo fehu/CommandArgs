@@ -44,7 +44,7 @@ data AnArgValParser v = forall p . (ArgValParser p v) => ArgValParser (p v)
 
 data SingleParser v = SingleParser String (String -> Maybe v)
 
-parseSingle (SingleParser _ p) = p
+-- parseSingle (SingleParser _ p) = p
 
 
 
@@ -59,6 +59,7 @@ instance ArgValParser AnArgValParser v where
 
 
 instance ArgValParser SingleParser v where
+    parseArgValue _ [] = (Left $ \a -> ["Argument '" ++ a ++ "' not provided"], [])
     parseArgValue (SingleParser _ p) (h:t) =
         case p h of Just v -> (Right v, t)
                     _      -> (Left $ msg h, h:t)

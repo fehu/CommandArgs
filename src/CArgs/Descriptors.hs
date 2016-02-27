@@ -14,6 +14,9 @@
 {-# LANGUAGE ExistentialQuantification
            , MultiParamTypeClasses
            , FlexibleInstances
+           , KindSignatures
+           , DataKinds
+           , Rank2Types
         #-}
 
 module CArgs.Descriptors (
@@ -26,7 +29,8 @@ module CArgs.Descriptors (
 , Flag(..)
 
 , AnOptional(..)
-, Opt(..)
+, Opt(..), fromOpt, FromOptF
+, SubArgs
 
 , CArgs(..)
 
@@ -58,9 +62,8 @@ class CArg a v where
 
 
 data Positional a = Positional String (SingleParser a) Multiline
-    deriving Show
 
-type SubArgs vs = AList Positional vs
+type SubArgs = AList Positional
 
 data Optional vs v = Optional {
       shortNames     :: [Char]
@@ -75,15 +78,28 @@ data Optional vs v = Optional {
 
 data AnOptional v = forall vs . AnOptional (Optional vs v)
 
-data Opt = forall v . (Typeable v)    => Opt  (AnOptional v)
-         | forall v vs . (Typeable v) => Opt' (Optional vs v)
+data Opt = forall v . (Typeable v, Show v)    => Opt  (AnOptional v)
+         | forall v vs . (Typeable v, Show v) => Opt' (Optional vs v)
 
 
-data Flag = Flag deriving Show
+type FromOptF (a :: [*] -> * -> *) b = forall x y . a x y -> b
+
+fromOpt :: FromOptF Optional r -> Opt -> r
+fromOpt f (Opt (AnOptional opt)) = f opt
+fromOpt f (Opt' opt) = f opt
+
+--optName (Opt (AnOptional opt)) = argName opt
+--optName (Opt' opt) = argName opt
+
+data Flag = Flag
 
 -----------------------------------------------------------------------------
 
+instance Show Flag where show _ = "!"
+
 instance Show (Optional vs v) where show = argName
+
+instance Show (Positional  v) where show (Positional name _ _) = name
 
 instance CArg Positional v where argName (Positional n _ _) = n
                                  argDescription = describePosArgument

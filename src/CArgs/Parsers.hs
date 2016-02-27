@@ -11,13 +11,6 @@
 -- |
 --
 
-{-# LANGUAGE MultiParamTypeClasses
-           , FlexibleInstances
-           , DataKinds
-           , TypeOperators
-           , FlexibleContexts
-        #-}
-
 module CArgs.Parsers (
 
   DefaultSingleParser(singleParser)
@@ -29,20 +22,17 @@ module CArgs.Parsers (
 , bool
 , list
 
-, parsePositional
+
 
 ) where
 
-import AList
 import CArgs.Descriptors
 import CArgs.Parser
 
 import Text.Read
 import Data.Char
 import Data.Maybe
-import Data.List.Split
-import Data.Either.Projections
-
+import Data.List.Split (splitOneOf)
 
 -----------------------------------------------------------------------------
 
@@ -99,41 +89,6 @@ list (SingleParser name parse) = SingleParser name undefined
           f x = case map parse $ splitOneOf ",;" x
                     of l | all isJust l -> Just $ map fromJust l
                        _                -> Nothing
-
-
-
------------------------------------------------------------------------------
-
-instance CombinedArgValParser subs (CombinedArgValParserStub subs) '[] Flag where
-    parseArgCombined (CombinedArgValParserSingle p) _ = parseArgValue p
-    combinedParserName (CombinedArgValParserSingle p) = parseArgType p
-
-
-type TryDR = EitherDR Multiline
-
------------------------------------------------------------------------------
-
-parsePositional :: ( MapAList lp (Positional :-: Identity)
-                   , MapAList lp (TryDR (Positional :-: Identity))
-                   , MapAList lp (EitherDR (Maybe Multiline) (Positional :-: Identity))
-               ) =>
-                   AList Positional lp
-                -> [String]
-                -> Try (AList (Positional :-: Identity) lp)
-parsePositional al args =  toEither . fmap concat . leftProjection $ try
-    where tryList = aMap f $ aZip al args
-          f (a :<: s) = case r of Left ff -> LeftDR . ff $ argName a
-                                  Right v -> RightDR $ a :-: Identity v
-                where parser  = argValParser a
-                      (r, ls) = parseArgValue parser [s]
-          try = eitherDR tryList
-
------------------------------------------------------------------------------
-
-
-parseOptionals = undefined
-
-
 
 
 

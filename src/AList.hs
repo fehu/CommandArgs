@@ -37,6 +37,7 @@ module AList (
 
 , AnyFunc, DepFunc, DepFuncM
 
+, aLength
 , a2List
 , aAnyOf
 , MapAList(..)
@@ -109,6 +110,11 @@ a2List :: AnyFunc c r -> AList c l -> [r]
 a2List f (h:.t) = f h : a2List f t
 a2List f Nil = []
 
+-- | Length of an 'AList'.
+aLength :: AList c l -> Int
+aLength (h:.t) = aLength t + 1
+aLength Nil    = 0
+
 -- | Tests if any underlying value complies with predicate.
 aAnyOf :: AnyFunc a Bool -> AList a l -> Bool
 aAnyOf _ Nil = False
@@ -125,13 +131,22 @@ instance (Show (r h), MapAList t r) => MapAList (h ': t) r
 -----------------------------------------------------------------------------
 
 -- | A pair of dependent types.
-data (:-:) a b t = (:-:) (a t) (b t) deriving Show
+data (:-:) a b t = (:-:) (a t) (b t)
 -- | A pair with a dependent left type.
-data (:<:) a b t = (:<:) (a t)  b    deriving Show
+data (:<:) a b t = (:<:) (a t)  b
 
 -- | Identity type.
-newtype Identity a = Identity a deriving (Show, Eq, Ord)
+newtype Identity a = Identity a deriving (Eq, Ord)
 unwrapId (Identity a) = a
+
+
+instance (Show (a t), Show (b t))   => Show ((a :-: b) t)
+    where show (l :-: r) = show l ++ " ~ " ++ show r
+instance (Show (a t), Show b)       => Show ((a :<: b) t)
+    where show (l :<: r) = show l ++ " ~ " ++ show r
+instance (Show a)                   => Show (Identity a)
+    where show (Identity i) = show i
+
 
 -- | Zips 'AList' with a list.
 aZip :: (Show b) => AList c l -> [b] -> AList (c :<: b) l

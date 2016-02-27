@@ -15,22 +15,32 @@
 --
 
 
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, TypeOperators, FlexibleContexts #-}
 
 module CArgs (
 
   module CArgs.Descriptors
 , module CArgs.Parsers
 
+-- * Declare optionals
+
 , optionalFlag
 , optional
 
+-- * Arguments parsing
+
+, parseArgs
+
 ) where
 
-
+import AList
 import CArgs.Descriptors
 import CArgs.Parser
 import CArgs.Parsers
+import CArgs.Parsers.Internal
+import CArgs.Values
+
+import Data.Either.Projections
 
 -----------------------------------------------------------------------------
 
@@ -52,5 +62,19 @@ optional shorts longs descr argDescr = AnOptional $
     Optional shorts longs make descr (auto argDescr)
 
 -----------------------------------------------------------------------------
+
+parseArgs :: (CanParsePositionals lp) => CArgs lp -> [String] -> Try (CArgValues lp)
+parseArgs d args = mapRight (\positionals -> CArgValues positionals oVals oErrs)
+                            (parsePositional positionals args)
+    where positionals     = positionalArguments d
+          positionalsLen  = aLength positionals
+          (oErrs, oVals)  = parseOptionals (optionalArguments d)
+                          $ drop positionalsLen args
+
+-----------------------------------------------------------------------------
+
+
+
+
 
 

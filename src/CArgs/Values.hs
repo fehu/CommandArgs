@@ -18,9 +18,12 @@
 module CArgs.Values (
 
   CArgValues(..)
-, ArgValue
-, OptionalValues(..)
+
+, ArgValue(..)
+, argValueName
 , getArgValue
+
+, OptionalValues(..)
 , get
 
 
@@ -30,6 +33,7 @@ import AList
 import CArgs.Descriptors
 
 import Data.Typeable
+import Data.List (intercalate)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
@@ -39,20 +43,32 @@ import qualified Data.Map as Map
 data CArgValues lp = CArgValues {
       positionalValues :: AList (Positional :-: Identity) lp
     , optionalValues   :: OptionalValues
+    , optionalErrors   :: Multiline
     }
+    deriving Show
 
 -----------------------------------------------------------------------------
 
 
-data ArgValue = forall a v . (CArg a v, Typeable v) => ArgValue (a v) v
+data ArgValue = forall a v . (CArg a v, Typeable v, Show v) => ArgValue (a v) v
+
+instance Show ArgValue where show (ArgValue a v) = argName a ++ "=" ++ show v
+
+argValueName (ArgValue a _) = argName a
 
 getArgValue :: (Typeable a) => ArgValue -> Maybe a
 getArgValue (ArgValue _ v) = cast v
 
-newtype OptionalValues = Optionals (Map String ArgValue)
+
+
+newtype OptionalValues = OptionalValues (Map String ArgValue)
+
+instance Show OptionalValues where
+    show (OptionalValues vMap) = "OptionalValues{" ++ vals ++ "}"
+        where vals = intercalate "," . map show $  Map.elems vMap
 
 get :: (Typeable v) => OptionalValues -> Optional vs v -> Maybe v
-(Optionals oMp) `get` opt = getArgValue =<< argName opt `Map.lookup` oMp
+(OptionalValues oMp) `get` opt = getArgValue =<< argName opt `Map.lookup` oMp
 
 
 

@@ -9,6 +9,8 @@ import CArgs
 import CArgs.Parsers
 import CArgs.Descriptors
 
+--import CArgs.Parsers.Internal
+
 
 --main = hspec $ do
 --    describe "" undefined
@@ -43,11 +45,11 @@ hidlArg  = optional "H" ["hidden-layer"] ["Specify hidden layers"]
 
 
 
-test = parsePositional (positionalArguments args0) [
-    "/home/user/data/file.dat", "500", "results.txt"
+test = parseArgs args0 [
+    "/home/user/data/file.dat", "500", "results.txt", "-h", "-L", "0.2", "-x"
   ]
 
-
+--test' = parseOptionals (optionalArguments args0) ["-h", "-L", "0.2"]
 
 
 
