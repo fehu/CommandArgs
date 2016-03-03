@@ -15,7 +15,8 @@ import Data.List (intercalate)
 --main = hspec $ do
 --    describe "" undefined
 
-main = putStrLn $ intercalate "\n" testHelp'
+main =  print test'
+-- putStrLn $  intercalate "\n" test'
 
 
 
@@ -25,14 +26,18 @@ args0 = CArgs{
                        :. Positional "target"   text ["Target file"]
                        :. Nil
   , optionalArguments = [
-        Opt' helpArg
-      , Opt  lrateArg
-      , Opt  hidlArg
-      , Opt  extraArgs
+        Opt helpArg
+      , Opt lrateArg
+      , Opt hidlArg
+      , Opt extraArgs
     ]
 }
 
-helpArg  = optionalFlag "h" ["help"] ["Show help"]
+--helpArg  = optionalFlag "h" ["help"] ["Show help"]
+
+helpArg :: AnOptional (VarArg Text)
+helpArg  = variable "h" ["help"] ["Show help"]
+                    ["Commands to show the help foe"]
 
 lrateArg :: AnOptional Float
 lrateArg = optional "L" ["learn-rate"] ["Specify learning rate"]
@@ -48,13 +53,15 @@ extraArgs = variable "E" ["extra"] ["Pass extra arguments"]
                      ["Extra arguments"]
 
 
-testHelp  = fullHelp "exec_name" args0
-testHelp' = helpFor args0 "learn-rate"
+--testHelp  = fullHelp "exec_name" args0
+--testHelp' = helpFor args0 "aaa"
 
 test = parseArgs args0 [
-    "/home/user/data/file.dat", "500", "results.txt", "-h", "-L", "0.2"
-  , "-E", "QWE", "RTY", "-H", "a,t"
+    "/home/user/data/file.dat", "500", "results.txt", "-L", "0.2"
+  , "-E", "QWE", "RTY", "--hidden-layer", "a,t", "-h", "A"
   ]
+
+test' = parseArgs args0 ["--help", "hidden-layer"]
 
 
 

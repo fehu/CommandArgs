@@ -39,6 +39,7 @@ module AList (
 
 , aLength
 , a2List
+, a2ListWithFilter
 , aAnyOf
 , MapAList(..)
 
@@ -104,11 +105,17 @@ type DepFuncM m a b = forall x . a x -> m (b x)
 
 -----------------------------------------------------------------------------
 
+-- | Filter and transform 'AList' to list, given a 'AnyFunc' filter and
+--   transformation functions for the underlying values.
+a2ListWithFilter :: AnyFunc c Bool -> AnyFunc c r -> AList c l -> [r]
+a2ListWithFilter f g (h:.t) = if f h then g h : a2ListWithFilter f g t
+                                     else       a2ListWithFilter f g t
+a2ListWithFilter _ _ Nil    = []
+
 -- | Transform 'AList' to list, given a 'AnyFunc' transformation function
--- |  for the underlying values.
+--   for the underlying values.
 a2List :: AnyFunc c r -> AList c l -> [r]
-a2List f (h:.t) = f h : a2List f t
-a2List f Nil = []
+a2List = a2ListWithFilter (const True)
 
 -- | Length of an 'AList'.
 aLength :: AList c l -> Int
@@ -120,6 +127,7 @@ aAnyOf :: AnyFunc a Bool -> AList a l -> Bool
 aAnyOf _ Nil = False
 aAnyOf f (h:.t) | f h       = True
                 | otherwise = f `aAnyOf` t
+
 
 -- | Applies 'DepFunc' over underlying values.
 class MapAList l r where aMap :: DepFunc c r -> AList c l -> AList r l
@@ -210,7 +218,8 @@ condMap :: (MapAList l (EitherDR (Maybe r') r), MapAList l r) =>
 
 condMap fm fa l =
     if isLeftDR `aAnyOf` eithers
-            then Left . concatMap maybeToList $ a2List leftDRUnsafe eithers
+            then Left . concatMap maybeToList $
+                        a2ListWithFilter isLeftDR leftDRUnsafe eithers
             else Right $ aMap rightDRUnsafe eithers
     where eithers = aMap (f fm fa) l
           f fm' fa' x = case fm' x of Just x' -> RightDR x'

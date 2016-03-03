@@ -68,10 +68,14 @@ parsePositional :: (CanParsePositionals lp) =>
                    AList Positional lp
                 -> [String]
                 -> Try (AList (Positional :-: Identity) lp)
-parsePositional al args =  toEither . fmap concat . leftProjection $ try
+parsePositional al args = if length args < aLength al
+    then Left ["Not enough positional arguments"]
+    else toEither . fmap concat . leftProjection $ try
     where tryList = aMap f $ aZip al args
-          f (a :<: s) = case r of Left ff -> LeftDR . ff $ argName a
-                                  Right v -> RightDR $ a :-: Identity v
+          f (a :<: s) = if s `startsWith` "-"
+                        then case r of Left ff -> LeftDR . ff $ argName a
+                                       Right v -> RightDR $ a :-: Identity v
+                        else LeftDR ["Argument '" ++ argName a ++ "' not provided"]
                 where parser = argValParser a
                       (r, _) = parseArgValue parser [s]
           try = eitherDR tryList

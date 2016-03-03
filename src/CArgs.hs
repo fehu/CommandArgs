@@ -47,7 +47,7 @@ import CArgs.Parsers.Internal
 import CArgs.Values
 
 import Data.List (find, intercalate)
-import Data.Either.Projections
+import Data.Either
 
 -----------------------------------------------------------------------------
 
@@ -80,13 +80,14 @@ variable shorts longs descr argDescr = AnOptional $
 
 -----------------------------------------------------------------------------
 
-parseArgs :: (CanParsePositionals lp) => CArgs lp -> [String] -> Try (CArgValues lp)
-parseArgs d args = mapRight (\positionals -> CArgValues positionals oVals oErrs)
-                            (parsePositional positionals args)
+parseArgs :: (CanParsePositionals lp) => CArgs lp -> [String] -> CArgValues lp
+parseArgs d args = CArgValues positionalVals oVals oErrs
     where positionals     = positionalArguments d
           positionalsLen  = aLength positionals
-          (oErrs, oVals)  = parseOptionals (optionalArguments d)
-                          $ drop positionalsLen args
+          positionalVals  = parsePositional positionals args
+          argsRest        = if isLeft positionalVals then args else drop positionalsLen args
+          (oErrs, oVals)  = parseOptionals (optionalArguments d) argsRest
+
 
 -----------------------------------------------------------------------------
 

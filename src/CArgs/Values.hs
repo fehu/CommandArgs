@@ -41,7 +41,7 @@ import qualified Data.Map as Map
 
 
 data CArgValues lp = CArgValues {
-      positionalValues :: AList (Positional :-: Identity) lp
+      positionalValues :: Either [String] (AList (Positional :-: Identity) lp)
     , optionalValues   :: OptionalValues
     , optionalErrors   :: Multiline
     }

@@ -72,7 +72,7 @@ instance ArgValParser SingleParser v where
         case p h of Just v -> (Right v, t)
                     _      -> (Left $ msg h, h:t)
         where msg s arg = ["Failed to parse argument '" ++ arg
-                        ++ "', unexpected " ++ s]
+                        ++ "': " ++ s]
     parseArgType  (SingleParser t _) = t
 
 -----------------------------------------------------------------------------
