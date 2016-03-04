@@ -38,6 +38,8 @@ module AList (
 , AnyFunc, DepFunc, DepFuncM
 
 , aLength
+, aNull
+
 , a2List
 , a2ListWithFilter
 , aAnyOf
@@ -85,6 +87,7 @@ infixr :.
 
 instance Show (AList c l) where show (h:.Nil) = show h
                                 show (h:.t)   = show h ++ " : " ++ show t
+                                show Nil      = "[]"
 
 
 -- | Append type.
@@ -121,6 +124,9 @@ a2List = a2ListWithFilter (const True)
 aLength :: AList c l -> Int
 aLength (h:.t) = aLength t + 1
 aLength Nil    = 0
+
+aNull Nil = True
+aNull _   = False
 
 -- | Tests if any underlying value complies with predicate.
 aAnyOf :: AnyFunc a Bool -> AList a l -> Bool

@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                CommandArgs
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            -
 -- description:
 homepage:            -
@@ -21,6 +21,9 @@ library
                        CArgs.Descriptors
                        CArgs.Values
                        CArgs.Parsers
+                       CArgs.Optionals
+                       CArgs.Verbosity
+                       CArgs.Handler
                        AList
 
   other-modules:       CArgs.Parser
@@ -39,6 +42,7 @@ test-suite tests
     hs-source-dirs: test
     main-is:        args-test.hs
 
+    default-language: Haskell2010
     build-depends:  base
                   , CommandArgs
                   , hspec >= 2.2.2

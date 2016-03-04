@@ -73,11 +73,14 @@ data AnyArg = forall a v . (CArg a v) => AnyArg (a v)
 -----------------------------------------------------------------------------
 
 class ArgHelp a where argId   :: a -> String
+                      argType :: a -> String
                       argHelp :: a -> Multiline
 
 instance (CArg a v) => ArgHelp (a v) where argId = argName
+                                           argType = parseArgType . argValParser
                                            argHelp = argDescription
 instance ArgHelp AnyArg where argId (AnyArg a) = argId a
+                              argType (AnyArg a) = argType a
                               argHelp (AnyArg a) = argHelp a
 
 -----------------------------------------------------------------------------
@@ -101,22 +104,22 @@ data Optional vs v = Optional {
 
 data AnOptional v = forall vs . AnOptional (Optional vs v)
 
-data Opt = forall v . (Typeable v, Show v)    => Opt  (AnOptional v)
-         | forall v vs . (Typeable v, Show v) => Opt' (Optional vs v)
+data Opt = forall v . (Typeable v, Show v)    => Opt' (AnOptional v)
+         | forall v vs . (Typeable v, Show v) => Opt  (Optional vs v)
 
 
 type FromOptF (a :: [*] -> * -> *) b = forall x y . a x y -> b
 
 fromOpt :: FromOptF Optional r -> Opt -> r
-fromOpt f (Opt (AnOptional opt)) = f opt
-fromOpt f (Opt' opt) = f opt
+fromOpt f (Opt' (AnOptional opt)) = f opt
+fromOpt f (Opt opt) = f opt
 
 --optName (Opt (AnOptional opt)) = argName opt
 --optName (Opt' opt) = argName opt
 
 data Flag = Flag
 
-data VarArg v = VarArg [v]
+data VarArg v  = VarArg [v]
 
 -----------------------------------------------------------------------------
 
@@ -148,16 +151,17 @@ instance CArg (Optional as) v where
 
 -----------------------------------------------------------------------------
 
-describePosArgument (Positional n _ d) | length d > 1 = n:addIndent (replicate 2 ' ') d
-                                       | otherwise    = [unwords $ (n++"\t"):d]
+describePosArgument (Positional n p d)
+    | length d > 1 = (n ++ tName p) : addIndent (replicate 2 ' ') d
+    | otherwise    = [unwords $ n : tName p : "\t" : d]
 
 describeOptArgument opt = [
       unwords $ argName opt : map abrace aNames
     , replicate 3 ' ' ++ unwords (shortArgs ++ longArgs)
     ] ++ addIndent (replicate 3 ' ') (optDescription opt)
       ++ concatMap (addIndent $ replicate 6 ' ') aDescs ++ [""]
-    where (aNames, aDescs) = unzip $ a2List (argName &&& describePosArgument)
-                                            (optSubArgs opt)
+    where (aNames, aDescs) = unzip $ a2List (argName &&& describePosArgument) subArgs
+          subArgs = optSubArgs opt
           shortArgs = map (\c -> ['-', c]) $ shortNames opt
           longArgs = map ("--"++) $ longNames opt
 
@@ -166,6 +170,7 @@ addIndent i = map (i++)
 
 abrace s = "<" ++ s ++ ">"
 
+tName p = " :: " ++ parseArgType p
 
 -----------------------------------------------------------------------------
 

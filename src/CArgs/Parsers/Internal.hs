@@ -46,9 +46,9 @@ instance CombinedArgValParser SubArgs (CombinedArgValParserStub subs) '[] Flag w
     parseArgCombined (CombinedArgValParserSingle p) Nil = const (Right Flag) &&& id
     combinedParserName (CombinedArgValParserSingle p)   = parseArgType p
 
-instance CombinedArgValParser SubArgs (CombinedArgValParserStub subs) '[] (VarArg a) where
+instance CombinedArgValParser SubArgs (CombinedArgValParserStub subs) '[a] (VarArg a) where
     combinedParserName (CombinedArgValParserVar p) = parseArgType p
-    parseArgCombined (CombinedArgValParserVar p) Nil args = (varsParsed, rest)
+    parseArgCombined (CombinedArgValParserVar p) _ args = (varsParsed, rest)
         where varArgs = takeWhile (not . (`startsWith` "-")) args
               varsParsed = fst $ parseArgValue p varArgs
               rest    = drop (length varArgs) args
@@ -127,9 +127,9 @@ processOpt :: (String -> Maybe Opt)
           -> String -> String -> [String]
           -> (Try ArgValue, [String])
 processOpt find name pref = case find name
-    of Just (Opt (AnOptional opt)) -> processOpt' opt
-       Just (Opt' opt)             -> processOpt' opt
-       _                           -> const (Left [err]) &&& id
+    of Just (Opt' (AnOptional opt)) -> processOpt' opt
+       Just (Opt opt)               -> processOpt' opt
+       _                            -> const (Left [err]) &&& id
     where err = "Unknown optional argument '" ++ pref ++ name ++"'"
 
 

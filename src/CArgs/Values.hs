@@ -17,7 +17,10 @@
 
 module CArgs.Values (
 
+-- * Argument values
+
   CArgValues(..)
+, posValue
 
 , ArgValue(..)
 , argValueName
@@ -25,6 +28,7 @@ module CArgs.Values (
 
 , OptionalValues(..)
 , get
+
 
 
 ) where
@@ -37,6 +41,7 @@ import Data.List (intercalate)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
+
 -----------------------------------------------------------------------------
 
 
@@ -46,6 +51,10 @@ data CArgValues lp = CArgValues {
     , optionalErrors   :: Multiline
     }
     deriving Show
+
+
+posValue :: (Positional :-: Identity) v -> v
+posValue (_ :-: x) = unwrapId x
 
 -----------------------------------------------------------------------------
 
@@ -60,7 +69,6 @@ getArgValue :: (Typeable a) => ArgValue -> Maybe a
 getArgValue (ArgValue _ v) = cast v
 
 
-
 newtype OptionalValues = OptionalValues (Map String ArgValue)
 
 instance Show OptionalValues where
@@ -72,5 +80,11 @@ get :: (Typeable v) => OptionalValues -> Optional vs v -> Maybe v
 
 
 
------------------------------------------------------------------------------
+
+
+
+
+
+
+
 

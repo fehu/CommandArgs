@@ -15,68 +15,31 @@
 --
 
 
-{-# LANGUAGE DataKinds, TypeOperators, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, TypeOperators #-}
 
 module CArgs (
 
-  module CArgs.Descriptors
-, module CArgs.Parsers
+    application
+  , parseArgs
 
--- * Declare optionals
+  , AList(..)
+  , module X
+)
+  where
 
-, optionalFlag
-, optional
-, variable
+import CArgs.Descriptors as X
+import CArgs.Parsers as X
+import CArgs.Optionals as X
+import CArgs.Values as X
+import CArgs.Handler as X
 
--- * Arguments parsing
-
-, parseArgs
-
--- Help
-
-, fullHelp
-, helpFor
-
-) where
 
 import AList
-import CArgs.Descriptors
-import CArgs.Parser
-import CArgs.Parsers
 import CArgs.Parsers.Internal
-import CArgs.Values
 
-import Data.List (find, intercalate)
-import Data.Either
+import Data.Either (isLeft)
 
------------------------------------------------------------------------------
-
-make :: (DefaultSingleParser v) => ACombinedArgValParser (AList Positional) '[v] v
-make = CombinedArgValParser $ CombinedArgValParserSingle singleParser
-
-make' = CombinedArgValParser . CombinedArgValParserSingle
-
-makeVar :: (DefaultSingleParser v) => ACombinedArgValParser (AList Positional) '[] (VarArg v)
-makeVar = CombinedArgValParser $ CombinedArgValParserVar  defaultArgParser
-
-
-auto :: (DefaultSingleParser t) => Multiline -> AList Positional '[t]
-auto descr = Positional "value" singleParser descr :. Nil
-
--- | Create an optional 'Flag' argument.
-optionalFlag shorts longs descr = Optional shorts longs (make' flag) descr Nil
-
--- | Create an optional one-value argument.
-optional :: (DefaultSingleParser v) =>
-    [Char] -> [String] -> Multiline -> Multiline -> AnOptional v
-optional shorts longs descr argDescr = AnOptional $
-    Optional shorts longs make descr (auto argDescr)
-
--- | Create an argument with variable number of accepted values.
-variable :: (DefaultSingleParser v) =>
-    [Char] -> [String] -> Multiline -> Multiline -> AnOptional (VarArg v)
-variable shorts longs descr argDescr = AnOptional $
-    Optional shorts longs makeVar descr Nil
+import System.Environment
 
 -----------------------------------------------------------------------------
 
@@ -91,26 +54,11 @@ parseArgs d args = CArgValues positionalVals oVals oErrs
 
 -----------------------------------------------------------------------------
 
-fullHelp :: String ->  CArgs lp -> Multiline
-fullHelp executable d = [executable ++ " " ++ unwords posArgs ++ " " ++ unwords optArgs]
-                      ++ dPosArgs ++ dOptArgs
-    where (posArgs', optArgs') = getCArgs d
-          posArgs = map (abrace . argId) posArgs'
-          optArgs = map (sqbrace . argId) optArgs'
-          dPosArgs = ["\nPositional:"] ++ (addIndent (replicate 2 ' ') $ concatMap argHelp $ posArgs')
-          dOptArgs = ["\nOptional:\n"] ++ (addIndent (replicate 2 ' ') $ concatMap argHelp $ optArgs')
+-- | Parses current executable's command arguments and proceeds according to
+--   given 'ArgsHandler'
+application :: (CanParsePositionals lp) => CArgs lp -> ArgsHandler lp -> IO ()
+application ca ah = getArgs >>= (handleArgs ah . parseArgs ca)
 
 
 
 
-helpFor :: CArgs lp -> String -> Multiline
-helpFor d name = maybe notFound argHelp mbArg
-    where mbArg = find ((name ==) . argId) (getAllCArgs d)
-          notFound = ["Unknown argument : '" ++ name ++ "'"]
-
-
-
-addIndent i = map (i++)
-
-abrace s = "<" ++ s ++ ">"
-sqbrace s = "[" ++ s ++ "]"

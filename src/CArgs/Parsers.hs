@@ -34,6 +34,7 @@ module CArgs.Parsers (
 
 import CArgs.Descriptors
 import CArgs.Parser
+import CArgs.Verbosity
 
 import Text.Read
 import Data.Char
@@ -64,6 +65,8 @@ instance DefaultSingleParser Bool   where singleParser = bool
 instance (DefaultSingleParser a) =>
     DefaultSingleParser [a] where singleParser = list singleParser
 
+instance DefaultSingleParser Verbosity where
+    singleParser = SingleParser "Verbosity" readMaybe
 
 -----------------------------------------------------------------------------
 
