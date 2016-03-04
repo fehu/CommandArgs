@@ -175,15 +175,18 @@ tName p = " :: " ++ parseArgType p
 -----------------------------------------------------------------------------
 
 
-data CArgs lp = CArgs {
-      positionalArguments :: AList Positional lp
+data Alternative lp = Alternative String (AList Positional lp)
+alternativeArgs (Alternative _ args) = args
+
+data CArgs lps = CArgs {
+      positionalArguments :: AAList Alternative lps
     , optionalArguments :: [Opt]
     }
 
 -- | Get positional, optional args.
 getCArgs :: CArgs lp -> ([AnyArg], [AnyArg])
-getCArgs d = (pos, opt)
-    where pos = a2List AnyArg (positionalArguments d)
+getCArgs d = (concat pos, opt)
+    where pos = aa2List (a2List AnyArg . alternativeArgs) (positionalArguments d)
           opt = map anyArgOpt (optionalArguments d)
 
 getAllCArgs :: CArgs lp -> [AnyArg]

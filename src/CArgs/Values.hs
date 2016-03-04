@@ -19,7 +19,8 @@ module CArgs.Values (
 
 -- * Argument values
 
-  CArgValues(..)
+  AlternativeValues(..)
+, CArgValues(..)
 , posValue
 
 , ArgValue(..)
@@ -44,9 +45,11 @@ import qualified Data.Map as Map
 
 -----------------------------------------------------------------------------
 
+data AlternativeValues lp = AlternativeValues String (AList (Positional :-: Identity) lp)
+                          | AlternativeFailed String
 
-data CArgValues lp = CArgValues {
-      positionalValues :: Either [String] (AList (Positional :-: Identity) lp)
+data CArgValues lps = CArgValues {
+      positionalValues :: Either [String] (AAList AlternativeValues lps)
     , optionalValues   :: OptionalValues
     , optionalErrors   :: Multiline
     }

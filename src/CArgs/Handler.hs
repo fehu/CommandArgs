@@ -11,7 +11,7 @@
 -- | Handling arguments
 --
 
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators, GADTs #-}
 
 module CArgs.Handler (
 
@@ -42,11 +42,13 @@ import Data.List (find, intercalate)
 
 -----------------------------------------------------------------------------
 
+newtype AlternativeHandler lp = AlternativeHandler
+    (AList (Positional :-: Identity) lp -> OptionalValues -> Verbosity -> IO ())
 
 -- | Arguments handling descriptor.
-data ArgsHandler lp = ArgsHandler{
+data ArgsHandler lps = ArgsHandler{
     -- | Case all positional arguments are in place.
-    handleMain :: AList (Positional :-: Identity) lp -> OptionalValues -> Verbosity -> IO ()
+    handleMain :: AAList AlternativeHandler lps
     -- | Case failed to parse positional arguments.
   , handleOpts :: OptionalValues -> Verbosity -> IO ()
     -- | Default verbosity level.
@@ -66,10 +68,17 @@ argsHandler = ArgsHandler {
 handleArgs :: ArgsHandler ls -> CArgValues ls -> IO ()
 handleArgs ah av =
     do showProblems verb av
-       case positionalValues av of Right pos -> handleMain ah pos opts verb
+       case positionalValues av of Right alts -> f alts (handleMain ah)
+--       sequence_ $ aa2List (f pos) (handleMain ah)
+--       handleMain ah pos opts verb
                                    Left errs -> handleOpts ah opts verb
     where opts = optionalValues av
           verb = fromMaybe (defaultVerbosity ah) (updateVerbosity ah opts)
+          f :: AAList AlternativeValues ls -> AAList AlternativeHandler ls -> IO ()
+          f (AlternativeValues _ vals :.: _) (AlternativeHandler g :.: _) = g vals opts verb
+          f (AlternativeFailed _ :.: t)      (_ :.: t')                   = f t t'
+          f Nil'                              _                           = error
+                                                                             "failed to parse args"
 
 
 -----------------------------------------------------------------------------

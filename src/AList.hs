@@ -28,6 +28,8 @@ module AList (
 
   AList((:.), Nil)
 
+, AAList(..)
+
 -- * Lists types combination.
 
 , (::+)
@@ -42,6 +44,8 @@ module AList (
 
 , a2List
 , a2ListWithFilter
+, aa2List
+
 , aAnyOf
 , MapAList(..)
 
@@ -85,10 +89,17 @@ data AList (d :: * -> *) (l::[*]) where
 
 infixr :.
 
+data AAList (d :: [*] -> *) (l::[[*]]) where
+    Nil'  :: AAList c '[]
+    (:.:) :: (Show (d a)) => d a -> AAList d l -> AAList d (a ': l)
+
 instance Show (AList c l) where show (h:.Nil) = show h
                                 show (h:.t)   = show h ++ " : " ++ show t
                                 show Nil      = "[]"
 
+instance Show (AAList c ls) where show (h:.:Nil') = show h
+                                  show (h:.:t)    = show h ++ " :.: " ++ show t
+                                  show Nil'       = "[]"
 
 -- | Append type.
 type family (::+) (l :: [*]) (x :: *) :: [*] where
@@ -103,6 +114,7 @@ type family (:++:) (l :: [*]) (r :: [*]) :: [*] where
 -----------------------------------------------------------------------------
 
 type AnyFunc a b = forall x . a x -> b
+type AnyFunc' a b = forall (x :: [*]) . a x -> b
 type DepFunc a b = forall x . a x -> b x
 type DepFuncM m a b = forall x . a x -> m (b x)
 
@@ -119,6 +131,13 @@ a2ListWithFilter _ _ Nil    = []
 --   for the underlying values.
 a2List :: AnyFunc c r -> AList c l -> [r]
 a2List = a2ListWithFilter (const True)
+
+-- | Transform 'AAList' to list, given a transformation function
+--   for the underlying 'AList's.
+aa2List :: AnyFunc' c r -> AAList c ls -> [r]
+aa2List f (hl :.: tl) = f hl : aa2List f tl
+aa2List _ _           = []
+
 
 -- | Length of an 'AList'.
 aLength :: AList c l -> Int

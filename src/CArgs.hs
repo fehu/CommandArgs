@@ -42,8 +42,8 @@ import Data.Either (isLeft)
 import System.Environment
 
 -----------------------------------------------------------------------------
-
-parseArgs :: (CanParsePositionals lp) => CArgs lp -> [String] -> CArgValues lp
+--(CanParsePositionals lps) =>
+parseArgs :: CArgs lps -> [String] -> CArgValues lps
 parseArgs d args = CArgValues positionalVals oVals oErrs
     where positionals     = positionalArguments d
           positionalsLen  = aLength positionals
@@ -56,7 +56,9 @@ parseArgs d args = CArgValues positionalVals oVals oErrs
 
 -- | Parses current executable's command arguments and proceeds according to
 --   given 'ArgsHandler'
-application :: (CanParsePositionals lp) => CArgs lp -> ArgsHandler lp -> IO ()
+
+--(CanParsePositionals lp) =>
+application :: CArgs lp -> ArgsHandler lp -> IO ()
 application ca ah = getArgs >>= (handleArgs ah . parseArgs ca)
 
 
