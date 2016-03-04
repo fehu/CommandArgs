@@ -96,23 +96,27 @@ showErr  = showProbl "[ERROR]"
 
 -- | Handles optional argument 'helpArg'.
 handleHelp :: String            -- ^ Executable name.
+           -> Multiline         -- ^ Help header.
            -> CArgs lp          -- ^ Command arguments descriptor.
            -> OptionalValues    -- ^ Extracted optional values.
            -> Verbosity         -- ^ For compatibility, not used.
            -> IO ()
-handleHelp execName ca opts _ =
+handleHelp execName hheader ca opts _ =
     case opts `get` helpArg
-    of Just (VarArg []) -> putStrLn . intercalate "\n" $ fullHelp execName ca
+    of Just (VarArg []) -> putStrLn . intercalate "\n" $ fullHelp execName hheader ca
        Just (VarArg l)  -> mapM_ (putStrLn . ('\n':) . intercalate "\n" . helpFor ca . text2str) l
        Nothing          -> return ()
 
 
 -- | Help entries for all arguments.
 fullHelp :: String      -- ^ Executable name.
+         -> Multiline   -- ^ Help header.
          -> CArgs lp    -- ^ Command arguments descriptor.
          -> Multiline
-fullHelp executable d = [executable ++ " " ++ unwords posArgs ++ " " ++ unwords optArgs]
-                      ++ dPosArgs ++ dOptArgs
+fullHelp executable hheader d =
+    "":hheader
+    ++ ['\n' : executable ++ " " ++ unwords posArgs ++ " " ++ unwords optArgs]
+    ++ dPosArgs ++ dOptArgs
     where (posArgs', optArgs') = getCArgs d
           posArgs = map (abrace . argId) posArgs'
           optArgs = map (sqbrace . argId) optArgs'

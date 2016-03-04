@@ -3,40 +3,71 @@
 ### Describe Arguments
 
 ```haskell
-args0 = CArgs{
-    positionalArguments = Positional "datafile" text ["Path to the data file."]
-                       :. Positional "epochs"   int  ["Epochs count"]
-                       :. Positional "target"   text ["Target file"]
+args1 = CArgs{
+    positionalArguments = Positional "x" float ["First number"]
+                       :. Positional "y" float ["Second number"]
                        :. Nil
   , optionalArguments = [
-        Opt' helpArg
-      , Opt  lrateArg
-      , Opt  hidlArg
-      , Opt  extraArgs
+        Opt optPlus
+      , Opt optMult
+      , Opt helpArg
+      , Opt verbArg
     ]
 }
 
-helpArg  = optionalFlag "h" ["help"] ["Show help"]
+optPlus = optionalFlag "" ["plus"] ["Sum two numbers (default)"]
+optMult = optionalFlag "x" ["mult"] ["Multiply two numbers"]
 
-lrateArg :: AnOptional Float
-lrateArg = optional "L" ["learn-rate"] ["Specify learning rate"]
-                    ["learning rate value, in [0, 1]"]
+```
 
-hidlArg :: AnOptional [Text]
-hidlArg  = optional "H" ["hidden-layer"] ["Specify hidden layers"]
-                    ["number of neurons, separated by ',' or ';'"]
+### Describe Program
 
+```haskell
 
-extraArgs :: AnOptional (VarArg Text)
-extraArgs = variable "E" ["extra"] ["Pass extra arguments"]
-                     ["Extra arguments"]
+main = application args1 argsHandler{
+    handleMain = \(x :. y :. Nil) opts verb -> let f = maybe (+) (const (*)) (opts `get` optMult)
+                                               in print $ f (posValue x) (posValue y)
+  , handleOpts = handleHelp "test1" hheader args1
+}
 
+hheader = ["Apply a binary function to float numbers:"]
 
-parseArgs args0 [
-    "/home/user/data/file.dat", "500", "results.txt", "-h", "-L", "0.2"
-  , "-E", "QWE", "RTY", "-H", "a,t"
-  ]
+```
 
--- Right (CArgValues {positionalValues = datafile ~ "/home/user/data/file.dat" : epochs ~ 500 : target ~ "results.txt", optionalValues = OptionalValues{extra=["QWE","RTY"],help=!,hidden-layer=["a","t"],learn-rate=0.2}, optionalErrors = []})
+### Help Entries
+
+```
+user@domain > dist/build/tests/tests -h
+
+Apply a binary function to float numbers:
+
+test1 <x> <y> [plus] [mult] [help] [verbosity]
+
+Positional:
+  x  :: Float 	 First number
+  y  :: Float 	 Second number
+
+Optional:
+
+  plus
+     --plus
+     Sum two numbers (default)
+
+  mult
+     -x --mult
+     Multiply two numbers
+
+  help <cmd...>
+     -h --help
+     Show help
+        cmd...  :: Text 	 Commands to show the help for
+
+  verbosity <value>
+     -V --verbosity
+     Set verbosity
+        value :: Verbosity
+          verbosity level: 0-3
+          or 'silent', 'errors', 'warn', 'full'
+
 
 ```

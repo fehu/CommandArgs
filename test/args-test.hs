@@ -72,10 +72,10 @@ optMult = optionalFlag "x" ["mult"] ["Multiply two numbers"]
 main = application args1 argsHandler{
     handleMain = \(x :. y :. Nil) opts verb -> let f = maybe (+) (const (*)) (opts `get` optMult)
                                                in print $ f (posValue x) (posValue y)
-  , handleOpts = handleHelp "test1" args1
+  , handleOpts = handleHelp "test1" hheader args1
 }
 
-
+hheader = ["Apply a binary function to float numbers:"]
 
 
 
