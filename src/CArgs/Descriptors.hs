@@ -152,8 +152,8 @@ instance CArg (Optional as) v where
 -----------------------------------------------------------------------------
 
 describePosArgument (Positional n p d)
-    | length d > 1 = (n ++ tName p) : addIndent (replicate 2 ' ') d
-    | otherwise    = [unwords $ n : tName p : "\t" : d]
+    | length d > 1 = unwords [n, tName p] : addIndent (replicate 2 ' ') d
+    | otherwise    = [unwords $ n : tName p : "\t-- " : d]
 
 describeOptArgument opt = [
       unwords $ argName opt : map abrace aNames
@@ -170,7 +170,7 @@ addIndent i = map (i++)
 
 abrace s = "<" ++ s ++ ">"
 
-tName p = " :: " ++ parseArgType p
+tName p = ":: " ++ parseArgType p
 
 -----------------------------------------------------------------------------
 

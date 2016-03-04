@@ -76,12 +76,11 @@ handleArgs ah av =
 -- Argument process verbosity
 
 showProblems VerbSilent av = return ()
-showProblems VerbErrors av =
-    case positionalValues av of Left [_] -> return ()
-                                Left err -> showErr err
-                                _        -> return ()
+showProblems VerbErrors av = return ()
 showProblems VerbWarn av =
-    do showProblems VerbErrors av
+    do case positionalValues av of Left [_] -> return ()
+                                   Left err -> showErr err
+                                   _        -> return ()
        showWarn $ optionalErrors av
 
 showProblems VerbFull av = print av

@@ -23,6 +23,9 @@ module CArgs (
   , parseArgs
 
   , AList(..)
+  , SingleParser(..)
+  , GenericParser(..)
+
   , module X
 )
   where
@@ -35,6 +38,7 @@ import CArgs.Handler as X
 
 
 import AList
+import CArgs.Parser
 import CArgs.Parsers.Internal
 
 import Data.Either (isLeft)
