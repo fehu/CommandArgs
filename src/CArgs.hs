@@ -15,7 +15,7 @@
 --
 
 
-{-# LANGUAGE FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module CArgs (
 
@@ -63,6 +63,6 @@ parseArgs d args = CArgValues positionalVals oVals oErrs
 application :: (CanParsePositionals lp) => CArgs lp -> ArgsHandler lp -> IO ()
 application ca ah = getArgs >>= (handleArgs ah . parseArgs ca)
 
-
+-----------------------------------------------------------------------------
 
 

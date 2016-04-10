@@ -17,10 +17,10 @@
            , FlexibleInstances
            , ExistentialQuantification
            , FunctionalDependencies
+           , TypeFamilies
        #-}
 
 module CArgs.Parser where
-
 
 -----------------------------------------------------------------------------
 
@@ -86,15 +86,11 @@ class CombinedArgValParser (subs :: [*] -> *) p vs v | p -> subs
                            -> (TryA v, [String])
           combinedParserName :: p vs v -> String
 
+-----------------------------------------------------------------------------
+
 data ACombinedArgValParser subs vs v =
     forall p . (CombinedArgValParser subs p vs v) => CombinedArgValParser (p vs v)
 
-data CombinedArgValParserStub (subs :: [*] -> *)  (vs :: [*]) v =
-    CombinedArgValParserSingle (SingleParser v)
-  | CombinedArgValParserVar    (AnArgValParser v)
-
-
------------------------------------------------------------------------------
 
 
 instance Show (ACombinedArgValParser subs vs v) where
@@ -105,6 +101,13 @@ instance CombinedArgValParser subs (ACombinedArgValParser subs) vs v where
     parseArgCombined (CombinedArgValParser p) = parseArgCombined p
     combinedParserName (CombinedArgValParser p) = combinedParserName p
 
+-----------------------------------------------------------------------------
+
+data CombinedArgValParserStub (subs :: [*] -> *)  (vs :: [*]) v =
+    CombinedArgValParserSingle (SingleParser v)
+  | CombinedArgValParserVar    (AnArgValParser v)
+
+
 instance CombinedArgValParser subs (CombinedArgValParserStub subs) '[v] v where
     parseArgCombined (CombinedArgValParserSingle p) _ l = parseArgValue p l
     combinedParserName (CombinedArgValParserSingle p) = parseArgType p
@@ -113,6 +116,28 @@ instance CombinedArgValParser subs (CombinedArgValParserStub subs) '[v] v where
 
 -----------------------------------------------------------------------------
 
+data Combine2 a b = forall r . Combine2 (a -> b -> r)
+
+data (vs ~ [a,b]) =>
+    CombinedArgValParser2 (subs :: [*] -> *) a b vs v =
+     CombinedArgValParser2 String
+                           (subs [a,b] -> (SingleParser a, SingleParser b))
+                           (a -> b -> v) -- (SingleParser a) (SingleParser b) (a -> b -> v)
+
+
+
+instance CombinedArgValParser subs (CombinedArgValParser2 subs a b) [a,b] v where
+    parseArgCombined (CombinedArgValParser2 _ splitSubs combine) ps l = r
+        where (pa, pb) = splitSubs ps
+              (ta, l')  = parseArgValue pa l
+              (tb, l'') = parseArgValue pb l'
+              r = case (ta,tb) of (Right a, Right b) -> (Right $ a `combine` b, l'')
+                                  ((Left fail), _)   -> (Left fail, l)
+                                  (_, (Left fail))   -> (Left fail, l)
+
+    combinedParserName (CombinedArgValParser2 name _ _) = name
+
+-----------------------------------------------------------------------------
 
 data ArgValParserCombination v =
      ArgValParserCombination String ([String] -> (TryA v, [String]))
