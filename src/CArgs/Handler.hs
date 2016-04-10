@@ -28,6 +28,8 @@ module CArgs.Handler (
 , fullHelp
 , helpFor
 
+, withHelp
+
 ) where
 
 import AList
@@ -139,6 +141,17 @@ addIndent i = map (i++)
 
 abrace s = "<" ++ s ++ ">"
 sqbrace s = "[" ++ s ++ "]"
+
+-----------------------------------------------------------------------------
+
+-- | Shows help if help is the only arg given, or executes `orElse`.
+withHelp :: String -> Multiline -> CArgs lp -> CArgValues lp -> IO() -> IO()
+withHelp eName header d args orElse = case args of
+    CArgValues (Left _) opts _ -> case opts `get` helpArg of
+                                    Just _ | optValCount opts == 1 -> handleHelp eName header
+                                                                                 d opts undefined
+                                    _ -> orElse
+    _ -> orElse
 
 -----------------------------------------------------------------------------
 

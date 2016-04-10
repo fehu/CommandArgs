@@ -13,6 +13,7 @@
 
 {-# LANGUAGE ExistentialQuantification
            , TypeOperators
+           , DataKinds
        #-}
 
 module CArgs.Values (
@@ -28,8 +29,9 @@ module CArgs.Values (
 
 , OptionalValues(..)
 , get
+, flagSet
 
-
+, optValCount
 
 ) where
 
@@ -38,6 +40,8 @@ import CArgs.Descriptors
 
 import Data.Typeable
 import Data.List (intercalate)
+
+import Data.Maybe (isJust)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
@@ -78,10 +82,11 @@ instance Show OptionalValues where
 get :: (Typeable v) => OptionalValues -> Optional vs v -> Maybe v
 (OptionalValues oMp) `get` opt = getArgValue =<< argName opt `Map.lookup` oMp
 
+flagSet :: OptionalValues -> Optional '[] Flag -> Bool
+flagSet opts flag = isJust $ opts `get` flag
 
-
-
-
+optValCount :: OptionalValues -> Int
+optValCount (OptionalValues omap) = Map.size omap
 
 
 
