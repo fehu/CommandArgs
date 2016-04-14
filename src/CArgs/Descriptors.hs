@@ -32,7 +32,7 @@ module CArgs.Descriptors (
 , Optional(..)
 
 , Flag(..)
-, VarArg(..)
+, VarArg(..), varArgs
 
 , AnOptional(..)
 , Opt(..), fromOpt, FromOptF
@@ -120,6 +120,8 @@ fromOpt f (Opt opt) = f opt
 data Flag = Flag
 
 data VarArg v  = VarArg [v]
+
+varArgs (VarArg vs) = vs
 
 -----------------------------------------------------------------------------
 
