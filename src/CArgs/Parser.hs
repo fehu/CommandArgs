@@ -139,6 +139,31 @@ instance CombinedArgValParser subs (CombinedArgValParser2 subs a b) [a,b] v wher
 
 -----------------------------------------------------------------------------
 
+data Combine3 a b c = forall r . Combine3 (a -> b -> c -> r)
+
+data (vs ~ [a,b,c]) =>
+    CombinedArgValParser3 (subs :: [*] -> *) a b c vs v =
+     CombinedArgValParser3 String
+                           (subs [a,b,c] -> (SingleParser a, SingleParser b, SingleParser c))
+                           (a -> b -> c -> v)
+
+
+
+instance CombinedArgValParser subs (CombinedArgValParser3 subs a b c) [a,b,c] v where
+    parseArgCombined (CombinedArgValParser3 _ splitSubs combine) ps l = r
+        where (pa, pb, pc) = splitSubs ps
+              (ta, l')   = parseArgValue pa l
+              (tb, l'')  = parseArgValue pb l'
+              (tc, l''') = parseArgValue pc l''
+              r = case (ta,tb,tc) of (Right a, Right b, Right c) -> (Right $ combine a b c, l''')
+                                     ((Left fail), _, _)   -> (Left fail, l)
+                                     (_, (Left fail), _)   -> (Left fail, l)
+                                     (_, _, (Left fail))   -> (Left fail, l)
+
+    combinedParserName (CombinedArgValParser3 name _ _) = name
+
+-----------------------------------------------------------------------------
+
 data ArgValParserCombination v =
      ArgValParserCombination String ([String] -> (TryA v, [String]))
 
